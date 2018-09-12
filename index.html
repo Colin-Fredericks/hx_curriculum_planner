@@ -90,25 +90,38 @@
     let xparse = new DOMParser;
     let xser = new XMLSerializer();
 
-    // Create an XML string
-    let xmlString = '<Pages><Page Name="test"><controls><test>this is a test.</test></controls></Page><Page Name = "User"><controls><name>Sunil</name></controls></Page></Pages>';
-    console.log(xmlString);
+    // Create or get an XML string
+    // let xmlString = '<Pages><Page Name="test"><controls><test>this is a test.</test></controls></Page><Page Name = "User"><controls><name>Sunil</name></controls></Page></Pages>';
+    // console.log(xmlString);
+    let xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            parseAndProcess(this.responseText);
+        }
+    };
+    xmlhttp.open("GET", "test_course.xml", true);
+    xmlhttp.send();
 
-    // Parse it and store the namespace
-    let xdoc = xparse.parseFromString(xmlString, 'application/xml');
-    let xns = xdoc.documentElement.namespaceURI
-    console.log(xdoc);
+    function parseAndProcess(xmlString){
 
-    // Manipulate it
-    let UPC = xdoc.querySelectorAll('Page[Name="User"] controls');
-    var bloit = document.createElementNS(xns, 'bloit');
-    var btext = document.createTextNode('insert this tag');
-    bloit.appendChild(btext);
-    UPC[0].appendChild(bloit);
+        // Parse it and store the namespace
+        let xdoc = xparse.parseFromString(xmlString, 'application/xml');
+        let xns = xdoc.documentElement.namespaceURI;
+        console.log(xdoc);
 
-    //Serialize it
-    let finalString = xser.serializeToString(xdoc.documentElement);
-    console.log(finalString);
+        // Manipulate it
+        let UPC = xdoc.querySelectorAll('vertical[display_name="Page 4"]');
+        var bloit = document.createElementNS(xns, 'problem');
+        bloit.setAttribute('display_name','Problem 5');
+        var btext = document.createTextNode('');
+        bloit.appendChild(btext);
+        UPC[0].appendChild(bloit);
+
+        // Serialize it. Gonna need a prettifier eventually.
+        let finalString = xser.serializeToString(xdoc.documentElement);
+        console.log(finalString);
+
+    }
 
 </script>
 
