@@ -80,11 +80,36 @@
 
 <script type="text/babel">
 
-  ReactDOM.render(
-    <h1>Course Title</h1>,
-    document.getElementById('root')
-  );
-  
+    ReactDOM.render(
+        <h1>Course Title</h1>,
+        document.getElementById('root')
+    );
+
+
+    // Create XML parser and serializer
+    let xparse = new DOMParser;
+    let xser = new XMLSerializer();
+
+    // Create an XML string
+    let xmlString = '<Pages><Page Name="test"><controls><test>this is a test.</test></controls></Page><Page Name = "User"><controls><name>Sunil</name></controls></Page></Pages>';
+    console.log(xmlString);
+
+    // Parse it and store the namespace
+    let xdoc = xparse.parseFromString(xmlString, 'application/xml');
+    let xns = xdoc.documentElement.namespaceURI
+    console.log(xdoc);
+
+    // Manipulate it
+    let UPC = xdoc.querySelectorAll('Page[Name="User"] controls');
+    var bloit = document.createElementNS(xns, 'bloit');
+    var btext = document.createTextNode('insert this tag');
+    bloit.appendChild(btext);
+    UPC[0].appendChild(bloit);
+
+    //Serialize it
+    let finalString = xser.serializeToString(xdoc.documentElement);
+    console.log(finalString);
+
 </script>
 
 
@@ -92,26 +117,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-
-<script>
-  $(document).ready(function(){
-    // Define or get the XML
-    let xmlString = '<Pages><Page Name="test"><controls><test>this is a test.</test></controls></Page><Page Name = "User"><controls><name>Sunil</name></controls></Page></Pages>';
-    console.log(xmlString);
-
-    // Parse that into an XML object
-    let xmlObj = $.parseXML(xmlString);
-    
-    // Manipulate it
-    $(xmlObj).find('Page[Name="User"]').find('controls').append('<bloit>New item</bloit>');
-
-    // Turn it into a string for output
-    let ser = new XMLSerializer();
-    let finalString = ser.serializeToString(xmlObj.documentElement);
-    console.log(finalString);
-  });
-
-</script>
 
 </body>
 </html>
