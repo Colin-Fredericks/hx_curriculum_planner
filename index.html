@@ -17,27 +17,77 @@
     <!-- Don't use this in production: -->
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
 
-    <!-- Bootstrap: jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <style>
+        .b1{ background-color: #ccc;}
+        .b2{ background-color: #6cc;}
+        .b3{ background-color: #c6c;}
+        .b4{ background-color: #cc6;}
+        .b5{ background-color: #c66;}
+        .b6{ background-color: #6c6;}
+        .b7{ background-color: #66c;}
+        .b8{ background-color: #666;}
+
+    </style>
 
 </head>
 <body>
 
-    <h1>Test</h1>
+<div id="root"></div>
 
-    <div id="root"></div>
 
-    <script type="text/babel">
+<div class="container-fluid bigbox">
+<div class="row">
+    <div class="col-sm-9 border bg-light">
+        <p>View</p>
+        <div class="row subsection">
+            <div class="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
+                <div class="rounded p-1 m-1 bg-primary">Video</div> 
+                <div class="rounded p-1 m-1 bg-warning">HTML</div> 
+            </div>
+            <div class="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
+                <div class="rounded p-1 m-1 bg-primary">Video</div> 
+                <div class="rounded p-1 m-1 bg-info">Problem</div> 
+                <div class="rounded p-1 m-1 bg-success">Discussion</div>
+            </div>
+            <div class="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
+                <div class="rounded p-1 m-1 bg-primary">Video</div> 
+                <div class="rounded p-1 m-1 bg-info">Problem</div> 
+                <div class="rounded p-1 m-1 bg-success">Discussion</div>
+            </div>
+            <div class="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
+                <div class="rounded p-1 m-1 bg-warning">HTML</div> 
+                <div class="rounded p-1 m-1 bg-info">Problem</div>
+                <div class="rounded p-1 m-1 bg-info">Problem</div>
+                <div class="rounded p-1 m-1 bg-info">Problem</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3 template-items border bg-light">
+        <p>Components</p>
+        <div class="rounded p-1 m-1 bg-primary">Video</div> 
+        <div class="rounded p-1 m-1 bg-warning">HTML</div> 
+        <div class="rounded p-1 m-1 bg-info">Problem</div> 
+        <div class="rounded p-1 m-1 bg-success">Discussion</div> 
+        <div class="rounded p-1 m-1 bg-secondary">Other</div> 
+        <p>Templates</p>
+    </div>
+</div>
+</div>
 
-      ReactDOM.render(
-        <h1>Hello, world!</h1>,
-        document.getElementById('root')
-      );
+<script type="text/babel">
 
-    </script>
+  ReactDOM.render(
+    <h1>Course Title</h1>,
+    document.getElementById('root')
+  );
 
+</script>
+
+
+<!-- Bootstrap: jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 
 </body>
 </html>
