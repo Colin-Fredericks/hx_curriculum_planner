@@ -27,7 +27,7 @@
 <div class="row">
     <div class="col-sm-9 border bg-light">
         <p>View</p>
-        <div class="row subsection">
+        <div id="subsection_view" class="row subsection">
             <div class="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
                 <p class="font-weight-bold">Title</p>
                 <div class="rounded p-1 m-1 bg-primary" style="height: 50px;">Video</div> 
@@ -78,52 +78,7 @@
 </ul>
 
 
-<script type="text/babel">
-
-    ReactDOM.render(
-        <h1>Course Title</h1>,
-        document.getElementById('root')
-    );
-
-
-    // Create XML parser and serializer
-    let xparse = new DOMParser;
-    let xser = new XMLSerializer();
-
-    // Create or get an XML string
-    // let xmlString = '<Pages><Page Name="test"><controls><test>this is a test.</test></controls></Page><Page Name = "User"><controls><name>Sunil</name></controls></Page></Pages>';
-    // console.log(xmlString);
-    let xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            parseAndProcess(this.responseText);
-        }
-    };
-    xmlhttp.open("GET", "test_course.xml", true);
-    xmlhttp.send();
-
-    function parseAndProcess(xmlString){
-
-        // Parse it and store the namespace
-        let xdoc = xparse.parseFromString(xmlString, 'application/xml');
-        let xns = xdoc.documentElement.namespaceURI;
-        console.log(xdoc);
-
-        // Manipulate it
-        let UPC = xdoc.querySelectorAll('vertical[display_name="Page 4"]');
-        var bloit = document.createElementNS(xns, 'problem');
-        bloit.setAttribute('display_name','Problem 5');
-        var btext = document.createTextNode('');
-        bloit.appendChild(btext);
-        UPC[0].appendChild(bloit);
-
-        // Serialize it. Gonna need a prettifier eventually.
-        let finalString = xser.serializeToString(xdoc.documentElement);
-        console.log(finalString);
-
-    }
-
-</script>
+<script type="text/babel" src="render_subsection.js"></script>
 
 
 <!-- Bootstrap: jQuery first, then Popper.js, then Bootstrap JS -->
