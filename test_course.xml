@@ -5,12 +5,12 @@
                 <video></video>
                 <html></html>
             </vertical>
-            <vertical display_name="Page 2">
+            <vertical>
                 <video></video>
                 <problem></problem>
                 <discussion></discussion>
             </vertical>
-            <vertical display_name="Page 3">
+            <vertical display_name="Betty Page">
                 <video></video>
                 <problem></problem>
                 <discussion></discussion>

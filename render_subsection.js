@@ -55,7 +55,6 @@ class Vertical extends React.Component {
     constructor(props){
         super(props);
         this.state = {
-            title: 'Untitled page',
             total_duration: 0
         };
     }
@@ -87,7 +86,13 @@ class Vertical extends React.Component {
     render(){
         return (
             <div className="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
-                <p className="font-weight-bold">{this.state.title}</p>
+                <p className="font-weight-bold">
+                &nbsp; {
+                    typeof this.props.thisVert.attributes.display_name === 'undefined'
+                    ? 'Unnamed Unit'
+                    : this.props.thisVert.attributes.display_name.value
+                }
+                </p>
                 {this.renderComps()}
             </div>
         );
