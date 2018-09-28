@@ -13,23 +13,36 @@ const typeClassLookup = {
     'other': 'bg-secondary'
 };
 
+const typeIconLookup = {
+    'video': 'fa fa-video',
+    'html': 'fa fa-file-alt',
+    'problem': 'fa fa-question-circle',
+    'discussion': 'fa fa-comments',
+    'other': 'fa fa-file'
+}
+
 // EdX components are shown as boxes in the subsection view
 class Comp extends React.Component {
     constructor(props){
         super(props);
         this.state = {
-            comp_type: null,
             duration: 5
         };
     }
 
     render(){
+        console.log('rendering component');
         return (
             <div
-                className={'rounded p-1 m-1 ' + typeClassLookup(this.state.comp_type)}
-                style={'height: ' + this.state.duration * 10 + ';'}
+                className={'rounded p-1 m-1 ' + typeClassLookup[this.props.thisComp.tagName]}
+                style={{height: this.state.duration * 10 + 'px'}}
                 >
-                Example Component
+                <span className={typeIconLookup[this.props.thisComp.tagName]}></span>
+                &nbsp; {
+                    typeof this.props.thisComp.attributes.display_name === 'undefined'
+                    ? 'Unnamed ' + this.props.thisComp.tagName
+                    : this.props.thisComp.attributes.display_name.value
+                }
             </div>
         );
     }
@@ -47,10 +60,35 @@ class Vertical extends React.Component {
         };
     }
 
+    // Render the edX components for this vertical
+    renderComps(){
+        console.log('renderComps');
+
+        const xparse = new DOMParser;
+        const xdoc = xparse.parseFromString(this.props.thisVert.outerHTML, 'application/xml');
+        const vertical = xdoc.querySelectorAll('vertical');
+        console.log('This vertical:');
+        console.log(vertical);
+        const vert1 = vertical[0];
+
+        // For each edX component, create a div
+        const comps = Array.from(vert1.children).map(function(c, index){
+            return <Comp key={index} thisComp={c} />
+        });
+        console.log('components:');
+        console.log(comps);
+        return (
+            <React.Fragment>
+                {comps}
+            </React.Fragment>
+        )
+    }
+
     render(){
         return (
             <div className="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
                 <p className="font-weight-bold">{this.state.title}</p>
+                {this.renderComps()}
             </div>
         );
     }
@@ -106,7 +144,9 @@ class SSView extends React.Component {
         const seq1 = sequentials[0];
 
         // For each vertical, create a column
-        const verticals = Array.from(seq1.children).map( v => <Vertical/> );
+        const verticals = Array.from(seq1.children).map(function(v, index){
+            return <Vertical key={index} thisVert={v} />
+        });
         console.log('verticals:');
         console.log(verticals);
         return (
@@ -118,10 +158,10 @@ class SSView extends React.Component {
 
     render(){
         return(
-            <React.Fragment>
-                {this.renderLoadFileButton()}
-                {this.renderVerticals()}
-            </React.Fragment>
+            <div className='container'>
+                <div className='controls row'>{this.renderLoadFileButton()}</div>
+                <div className='allverticals row'>{this.renderVerticals()}</div>
+            </div>
         );
     }
 
