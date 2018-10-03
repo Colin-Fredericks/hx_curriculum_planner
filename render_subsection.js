@@ -61,6 +61,48 @@ class Comp extends React.Component {
 
 }
 
+// Button to add new components
+class CompAdder extends React.Component {
+    constructor(props){
+        super(props);
+    };
+
+    render(){
+        return (
+            <div
+                id={this.props.id}
+                style={{textAlign: 'center'}}
+                >
+                <button
+                    className='fa fa-plus'
+                ></button>
+            </div>
+        );
+    }
+}
+
+
+// Button to add new components
+class VertAdder extends React.Component {
+    constructor(props){
+        super(props);
+    };
+
+    render(){
+        return (
+            <div
+                id={this.props.id}
+                style={{textAlign: 'center'}}
+                >
+                <button
+                    className='fa fa-plus'
+                ></button>
+            </div>
+        );
+    }
+}
+
+
 // Verticals are shown as a column in the subsection view
 class Vertical extends React.Component {
     constructor(props){
@@ -83,13 +125,16 @@ class Vertical extends React.Component {
 
         // For each edX component, create a div
         const comps = Array.from(vert1.children).map(function(c, index){
-            return <Comp key={makeRandomID()} id={makeRandomID()} thisComp={c} />
+            const keyid = makeRandomID();
+            return <Comp key={keyid} id={keyid} thisComp={c} />
         });
         console.log('components:');
         console.log(comps);
+        const adderID = makeRandomID();
         return (
             <React.Fragment>
                 {comps}
+                <CompAdder key={adderID} id={adderID} />
             </React.Fragment>
         )
     }
@@ -164,13 +209,16 @@ class SSView extends React.Component {
 
         // For each vertical, create a column
         const verticals = Array.from(seq1.children).map(function(v, index){
-            return <Vertical key={makeRandomID()} id={makeRandomID()} thisVert={v} />
+            const keyid = makeRandomID();
+            return <Vertical key={keyid} id={keyid} thisVert={v} />
         });
         console.log('verticals:');
         console.log(verticals);
+        const adderID = makeRandomID();
         return (
             <React.Fragment>
                 {verticals}
+                <VertAdder key={adderID} id={adderID} />
             </React.Fragment>
         )
     }
@@ -234,7 +282,7 @@ function parseAndProcess(xmlString){
     // console.log(xdoc);
 
     // Manipulate it
-    let UPC = xdoc.querySelectorAll('vertical[display_name="Page 4"]');
+    let UPC = xdoc.querySelectorAll('vertical[display_name="Page 2"]');
     var bloit = document.createElementNS(xns, 'problem');
     bloit.setAttribute('display_name','Problem 5');
     var btext = document.createTextNode('');

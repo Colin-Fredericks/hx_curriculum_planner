@@ -5,7 +5,7 @@
                 <video></video>
                 <html></html>
             </vertical>
-            <vertical>
+            <vertical display_name="Page 2">
                 <video></video>
                 <problem></problem>
                 <discussion></discussion>
@@ -15,7 +15,7 @@
                 <problem></problem>
                 <discussion></discussion>
             </vertical>
-            <vertical display_name="Page 4">
+            <vertical>
                 <html display_name="Instructions"></html>
                 <problem display_name="Problem 1"></problem>
                 <problem display_name="Problem 2"></problem>
