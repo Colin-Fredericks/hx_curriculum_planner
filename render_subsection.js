@@ -21,6 +21,14 @@ const typeIconLookup = {
     'other': 'fa fa-file'
 }
 
+// Makes a probably unique ID for each XML tag.
+function makeRandomID(){
+    const textID = (Math.floor(Math.random() * 2**32).toString(16)) + (Math.floor(Math.random() * 2**32).toString(16));
+    // Fill leading zeroes
+    const finalID = Array(16 - textID.length).fill(0).toString().replace(',','') + textID;
+    return finalID;
+}
+
 // EdX components are shown as boxes in the subsection view
 class Comp extends React.Component {
     constructor(props){
@@ -35,9 +43,12 @@ class Comp extends React.Component {
         return (
             <div
                 className={'rounded p-1 m-1 ' + typeClassLookup[this.props.thisComp.tagName]}
+                id={this.props.id}
                 style={{height: this.state.duration * 10 + 'px'}}
                 >
-                <span className={typeIconLookup[this.props.thisComp.tagName]}></span>
+                <span
+                    className={typeIconLookup[this.props.thisComp.tagName]}
+                ></span>
                 &nbsp; {
                     typeof this.props.thisComp.attributes.display_name === 'undefined'
                     ? 'Unnamed ' + this.props.thisComp.tagName
@@ -72,7 +83,7 @@ class Vertical extends React.Component {
 
         // For each edX component, create a div
         const comps = Array.from(vert1.children).map(function(c, index){
-            return <Comp key={index} thisComp={c} />
+            return <Comp key={makeRandomID()} id={makeRandomID()} thisComp={c} />
         });
         console.log('components:');
         console.log(comps);
@@ -85,7 +96,10 @@ class Vertical extends React.Component {
 
     render(){
         return (
-            <div className="col-sm-2 p-1 m-1 border border-secondary vertical rounded">
+            <div
+                id={this.props.id}
+                className='ol-sm-2 p-1 m-1 border border-secondary vertical rounded'
+                >
                 <p className="font-weight-bold">
                 &nbsp; {
                     typeof this.props.thisVert.attributes.display_name === 'undefined'
@@ -131,7 +145,7 @@ class SSView extends React.Component {
                 xml: newXML
             });
             console.log('state:')
-            console.log(this.state);
+            console.log(that.state);
         });
     }
 
@@ -150,7 +164,7 @@ class SSView extends React.Component {
 
         // For each vertical, create a column
         const verticals = Array.from(seq1.children).map(function(v, index){
-            return <Vertical key={index} thisVert={v} />
+            return <Vertical key={makeRandomID()} id={makeRandomID()} thisVert={v} />
         });
         console.log('verticals:');
         console.log(verticals);
