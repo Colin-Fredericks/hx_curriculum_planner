@@ -29,6 +29,7 @@ function makeRandomID(){
     return finalID;
 }
 
+
 // EdX components are shown as boxes in the subsection view
 class Comp extends React.Component {
     constructor(props){
@@ -61,6 +62,7 @@ class Comp extends React.Component {
 
 }
 
+
 // Button to add new components
 class CompAdder extends React.Component {
     constructor(props){
@@ -74,6 +76,7 @@ class CompAdder extends React.Component {
                 style={{textAlign: 'center'}}
                 >
                 <button
+                    onClick={this.props.onClick}
                     className='fa fa-plus'
                 ></button>
             </div>
@@ -91,10 +94,12 @@ class VertAdder extends React.Component {
     render(){
         return (
             <div
+                className='ol-sm-2 p-1 m-1 border border-secondary vertical rounded'
                 id={this.props.id}
                 style={{textAlign: 'center'}}
                 >
                 <button
+                    onClick={this.props.onClick}
                     className='fa fa-plus'
                 ></button>
             </div>
@@ -112,7 +117,7 @@ class Vertical extends React.Component {
         };
     }
 
-    // Render the edX components for this vertical
+    // Return the edX components for this vertical
     renderComps(){
         console.log('renderComps');
 
@@ -131,10 +136,15 @@ class Vertical extends React.Component {
         console.log('components:');
         console.log(comps);
         const adderID = makeRandomID();
+        const compAdder = this.props.compAdder;
         return (
             <React.Fragment>
                 {comps}
-                <CompAdder key={adderID} id={adderID} />
+                <CompAdder
+                    key={adderID}
+                    id={adderID}
+                    onClick={compAdder}
+                />
             </React.Fragment>
         )
     }
@@ -158,6 +168,7 @@ class Vertical extends React.Component {
     }
 }
 
+
 // Button that loads the XML file
 function LoadFileButton(props) {
     return <button onClick = {props.onClick}>Load from file</button>;
@@ -173,7 +184,7 @@ class SSView extends React.Component {
         };
     }
 
-    handleButtonClick(){
+    handleLoadButton(){
 
         const that = this;
 
@@ -194,23 +205,39 @@ class SSView extends React.Component {
         });
     }
 
+    addCompTo(e){
+        console.log('Component added to vertical ' + e.target.parentNode.parentNode.id);
+    }
+
+    addVerticalTo(e){
+        console.log('Vertical added to sequence ' + e.target.parentNode.parentNode.id);
+    }
+
     renderLoadFileButton(){
-        return <LoadFileButton onClick={() => this.handleButtonClick()} />
+        return <LoadFileButton onClick={() => this.handleLoadButton()} />
     }
 
     renderVerticals(){
         console.log('renderVerticals');
+
         const xparse = new DOMParser;
         const xdoc = xparse.parseFromString(this.state.xml, 'application/xml');
         const sequentials = xdoc.querySelectorAll('sequential');
         console.log('sequentials:');
         console.log(sequentials);
         const seq1 = sequentials[0];
+        const ACT = this.addCompTo;
 
         // For each vertical, create a column
         const verticals = Array.from(seq1.children).map(function(v, index){
             const keyid = makeRandomID();
-            return <Vertical key={keyid} id={keyid} thisVert={v} />
+            return (
+                <Vertical
+                    key={keyid}
+                    id={keyid}
+                    thisVert={v}
+                    compAdder={(e) => ACT(e)}/>
+            )
         });
         console.log('verticals:');
         console.log(verticals);
@@ -218,7 +245,7 @@ class SSView extends React.Component {
         return (
             <React.Fragment>
                 {verticals}
-                <VertAdder key={adderID} id={adderID} />
+                <VertAdder key={adderID} id={adderID} onClick={(e) => this.addVerticalTo(e)}/>
             </React.Fragment>
         )
     }
@@ -227,7 +254,7 @@ class SSView extends React.Component {
         return(
             <div className='container'>
                 <div className='controls row'>{this.renderLoadFileButton()}</div>
-                <div className='allverticals row'>{this.renderVerticals()}</div>
+                <div className='allverticals row' id='testSubsection'>{this.renderVerticals()}</div>
             </div>
         );
     }
