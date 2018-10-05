@@ -50,6 +50,12 @@ function giveEverythingIDs(xmlString){
 }
 
 
+// Button that loads the XML file
+function LoadFileButton(props) {
+    return <button onClick = {props.onClick}>Load from file</button>;
+}
+
+
 // EdX components are shown as boxes in the subsection view
 class Comp extends React.Component {
     constructor(props){
@@ -144,8 +150,8 @@ class Vertical extends React.Component {
         const xparse = new DOMParser;
         const xdoc = xparse.parseFromString(this.props.thisVert.outerHTML, 'application/xml');
         const vertical = xdoc.querySelectorAll('vertical');
-        console.log('This vertical:');
-        console.log(vertical);
+        // console.log('This vertical:');
+        // console.log(vertical);
         const vert1 = vertical[0];
 
         // For each edX component, create a div
@@ -153,8 +159,8 @@ class Vertical extends React.Component {
             const keyid = $(c).data('key');
             return <Comp key={keyid} id={keyid} thisComp={c} />
         });
-        console.log('components:');
-        console.log(comps);
+        // console.log('components:');
+        // console.log(comps);
         const adderID = makeRandomID();
         const compAdder = this.props.compAdder;
         return (
@@ -188,18 +194,14 @@ class Vertical extends React.Component {
     }
 }
 
-
-// Button that loads the XML file
-function LoadFileButton(props) {
-    return <button onClick = {props.onClick}>Load from file</button>;
-}
-
+// The view of the whole subsection
 class SSView extends React.Component {
     constructor(props){
         super(props);
         this.state = {
             title: 'Untitled subsection',
-            total_duration: 0,
+            total_duration: -1,
+            sequence_id: -1,
             xml: '<sequential/>'
         };
     }
@@ -212,11 +214,11 @@ class SSView extends React.Component {
             return loadFromFile(resolve, reject);
         });
 
+        // Right now we're still loading the whole course XML.
+        // Later we'll do that elsewhere and just get one subsection here.
         isLoaded.then(function(loadedXML){
             console.log('Loading resolved');
             const newXML = parseAndProcess(loadedXML);
-            // console.log('Altered XML:');
-            // console.log(newXML);
             that.setState({
                 xml: newXML
             });
@@ -243,16 +245,14 @@ class SSView extends React.Component {
         const xparse = new DOMParser;
         const xdoc = xparse.parseFromString(this.state.xml, 'application/xml');
         const sequentials = xdoc.querySelectorAll('sequential');
-        console.log('sequentials:');
-        console.log(sequentials);
+        // console.log('sequentials:');
+        // console.log(sequentials);
         const seq1 = sequentials[0];
         const ACT = this.addCompTo;
 
         // For each vertical, create a column
         const verticals = Array.from(seq1.children).map(function(v, index){
-            console.log(v);
             const keyid = $(v).data('key');
-            console.log(keyid);
             return (
                 <Vertical
                     key={keyid}
@@ -261,8 +261,8 @@ class SSView extends React.Component {
                     compAdder={(e) => ACT(e)}/>
             )
         });
-        console.log('verticals:');
-        console.log(verticals);
+        // console.log('verticals:');
+        // console.log(verticals);
         const adderID = makeRandomID();
         return (
             <React.Fragment>
@@ -276,7 +276,12 @@ class SSView extends React.Component {
         return(
             <div className='container'>
                 <div className='controls row'>{this.renderLoadFileButton()}</div>
-                <div className='allverticals row' id='testSubsection'>{this.renderVerticals()}</div>
+                <div
+                    className='allverticals row'
+                    id={this.state.sequence_id}
+                    >
+                        {this.renderVerticals()}
+                </div>
             </div>
         );
     }
@@ -338,6 +343,7 @@ function parseAndProcess(xmlString){
     let UPC = xdoc.querySelectorAll('vertical[display_name="Page 2"]');
     var bloit = document.createElementNS(xns, 'problem');
     bloit.setAttribute('display_name','Problem 5');
+    bloit.setAttribute('data-key',makeRandomID());
     var btext = document.createTextNode('');
     bloit.appendChild(btext);
     UPC[0].appendChild(bloit);
