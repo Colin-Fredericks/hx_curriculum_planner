@@ -21,12 +21,32 @@ const typeIconLookup = {
     'other': 'fa fa-file'
 }
 
-// Makes a probably unique ID for each XML tag.
+
+// Makes a random, probably unique ID for each XML tag.
 function makeRandomID(){
     const textID = (Math.floor(Math.random() * 2**32).toString(16)) + (Math.floor(Math.random() * 2**32).toString(16));
     // Fill leading zeroes
     const finalID = Array(16 - textID.length).fill(0).toString().replace(',','') + textID;
     return finalID;
+}
+
+
+// Give every part of the XML an ID so we can find it.
+function giveEverythingIDs(xmlString){
+    console.log('Give everything IDs.')
+
+    // Parse the XML and use jQuery to add an ID to every element.
+    // Using data attributes instead of actual IDs just in case.
+    let xdoc = $.parseXML(xmlString);
+    $(xdoc).find('*').each(function(){
+        $(this).attr('data-key',makeRandomID());
+    });
+
+    // Serialize it. Gonna need a prettifier eventually.
+    const xser = new XMLSerializer();
+    const finalString = xser.serializeToString(xdoc);
+
+    return finalString;
 }
 
 
@@ -130,7 +150,7 @@ class Vertical extends React.Component {
 
         // For each edX component, create a div
         const comps = Array.from(vert1.children).map(function(c, index){
-            const keyid = makeRandomID();
+            const keyid = $(c).data('key');
             return <Comp key={keyid} id={keyid} thisComp={c} />
         });
         console.log('components:');
@@ -230,7 +250,9 @@ class SSView extends React.Component {
 
         // For each vertical, create a column
         const verticals = Array.from(seq1.children).map(function(v, index){
-            const keyid = makeRandomID();
+            console.log(v);
+            const keyid = $(v).data('key');
+            console.log(keyid);
             return (
                 <Vertical
                     key={keyid}
@@ -260,6 +282,7 @@ class SSView extends React.Component {
     }
 
 }
+
 
 ReactDOM.render(
     <SSView />,
@@ -302,8 +325,11 @@ function parseAndProcess(xmlString){
     const xparse = new DOMParser;
     const xser = new XMLSerializer();
 
+    // Give everything IDs.
+    let stringWithIDs = giveEverythingIDs(xmlString)
+
     // Parse the XML and store the namespace
-    let xdoc = xparse.parseFromString(xmlString, 'application/xml');
+    let xdoc = xparse.parseFromString(stringWithIDs, 'application/xml');
     let xns = xdoc.documentElement.namespaceURI;
     console.log('xdoc created');
     // console.log(xdoc);
@@ -321,21 +347,4 @@ function parseAndProcess(xmlString){
 
     return finalString;
 
-}
-
-// Takes an XML document and namespace.
-// Constructs the on-page structure via React.
-function XMLToReact(xdoc, xns){
-    // Get the first sequential tag
-    let sequentials = xdoc.querySelectorAll('sequential');
-    let seq1 = sequentials[0];
-    console.log(seq1);
-
-    // For each vertical, create a column
-    let verticals = seq1.children;
-    Array.from(verticals).forEach( v => console.log(v) );
-
-    // For each component in that vertical, create a div.
-
-    // Pass all this to the rendering engine.
 }
