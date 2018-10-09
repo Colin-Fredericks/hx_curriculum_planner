@@ -2,24 +2,24 @@
     <chapter>
         <sequential>
             <vertical display_name="Page 1">
-                <video></video>
-                <html></html>
+                <video data-time="5:00"></video>
+                <html data-time="2:00"></html>
             </vertical>
             <vertical display_name="Page 2">
-                <video></video>
-                <problem></problem>
-                <discussion></discussion>
+                <video data-time="6:00"></video>
+                <problem data-time="10:00"></problem>
+                <discussion data-time="5:00"></discussion>
             </vertical>
             <vertical display_name="Betty Page">
-                <video></video>
-                <problem></problem>
-                <discussion></discussion>
+                <video data-time="3:00"></video>
+                <problem data-time="8:00"></problem>
+                <discussion data-time="3:00"></discussion>
             </vertical>
             <vertical>
-                <html display_name="Instructions"></html>
-                <problem display_name="Problem 1"></problem>
-                <problem display_name="Problem 2"></problem>
-                <problem display_name="Problem 3"></problem>
+                <html display_name="Instructions" data-time="6:00"></html>
+                <problem display_name="Problem 1" data-time="3:00"></problem>
+                <problem display_name="Problem 2" data-time="5:00"></problem>
+                <problem display_name="Problem 3" data-time="6:00"></problem>
             </vertical>
         </sequential>
     </chapter>

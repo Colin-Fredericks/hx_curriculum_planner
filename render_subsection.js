@@ -21,6 +21,47 @@ const typeIconLookup = {
     'other': 'fa fa-file'
 }
 
+// Converts hh:mm:ss notation to a number of seconds.
+// If it's passed a number, it just spits that back out as seconds.
+function hmsToSec(hms){
+
+    let hmsText = hms.toString();
+    let hmsArray = hmsText.split(':');
+    let time = 0;
+
+    if(hmsArray.length == 3){
+        time = 3600*parseInt(hmsArray[0]) + 60*parseInt(hmsArray[1]) + Number(hmsArray[2]);
+    }else if(hmsArray.length == 2){
+        time = 60*parseInt(hmsArray[0]) + Number(hmsArray[1]);
+    }else if(hmsArray.length == 1){
+        time = Number(hmsArray[0]);
+    }
+
+    return time;
+}
+
+
+// Converts a number of seconds to hh:mm:ss notation.
+// Leading zeroes optional. Days not returned.
+function secToHMS(time, useLeadingZeroes = true){
+    let seconds = String(Math.floor(time          % 60));
+    let minutes = String(Math.floor((time / 60)   % 60));
+    let hours   = String(Math.floor((time / 3600) % 24));
+
+    if(useLeadingZeroes){
+        if(seconds.length == 1){ seconds = '0' + seconds; }
+        if(minutes.length == 1){ minutes = '0' + minutes; }
+        if(hours.length   == 1){ hours   = '0' + hours;   }
+    }
+
+    if(Number(hours) > 0){
+        return hours + ':' + minutes + ':' + seconds;
+    }else if(Number(minutes) > 0){
+        return minutes + ':' + seconds;
+    }else{
+        return seconds;
+    }
+}
 
 // Makes a random, probably unique ID for each XML tag.
 function makeRandomID(){
@@ -60,27 +101,26 @@ function LoadFileButton(props) {
 class Comp extends React.Component {
     constructor(props){
         super(props);
-        this.state = {
-            duration: 5
-        };
     }
 
     render(){
         console.log('rendering component');
+        // console.log(this.props.thisComp);
+        const duration = this.props.thisComp.attributes['data-time'].value;
+        const compName = typeof this.props.thisComp.attributes.display_name === 'undefined'
+            ? 'Unnamed ' + this.props.thisComp.tagName
+            : this.props.thisComp.attributes.display_name.value
+
         return (
             <div
                 className={'rounded p-1 m-1 ' + typeClassLookup[this.props.thisComp.tagName]}
                 id={this.props.id}
-                style={{height: this.state.duration * 10 + 'px'}}
+                style={{height: hmsToSec(duration) / 5 + 'px'}}
                 >
                 <span
                     className={typeIconLookup[this.props.thisComp.tagName]}
                 ></span>
-                &nbsp; {
-                    typeof this.props.thisComp.attributes.display_name === 'undefined'
-                    ? 'Unnamed ' + this.props.thisComp.tagName
-                    : this.props.thisComp.attributes.display_name.value
-                }
+                &nbsp; { compName }
             </div>
         );
     }
@@ -343,6 +383,7 @@ function parseAndProcess(xmlString){
     let UPC = xdoc.querySelectorAll('vertical[display_name="Page 2"]');
     var bloit = document.createElementNS(xns, 'problem');
     bloit.setAttribute('display_name','Problem 5');
+    bloit.setAttribute('data-time','6:00');
     bloit.setAttribute('data-key',makeRandomID());
     var btext = document.createTextNode('');
     bloit.appendChild(btext);
