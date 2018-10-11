@@ -251,6 +251,28 @@ class SSView extends React.Component {
         };
     }
 
+    makeTag(tagType='html', name='Unnamed Component', duration='5:00', xns='', datakey=makeRandomID()){
+        // Handle durations in pure seconds.
+        if(duration.search(':') == -1 ){ duration = secToHMS(duration) }
+
+        let newTag = document.createElementNS(xns, tagType);
+        newTag.setAttribute('display_name',name);
+        newTag.setAttribute('data-time',duration);
+        newTag.setAttribute('data-key',datakey);
+        let btext = document.createTextNode('');
+        newTag.appendChild(btext);
+        return newTag;
+    }
+
+    getCurrentSequence(){
+        const xparse = new DOMParser;
+        const xdoc = xparse.parseFromString(this.state.xml, 'application/xml');
+        const sequentials = xdoc.querySelectorAll('sequential');
+        const seq1 = sequentials[0];
+        const key = seq1.getAttribute('data-key');
+        if(key){ return key; } else { return 'nokeyfound'; }
+    }
+
     handleOutputButton(){
         // For right now, just dump the current XML to the console.
         // Uses vkBeautify: http://www.eslinstructor.net/vkbeautify/
@@ -261,6 +283,8 @@ class SSView extends React.Component {
     handleLoadButton(){
 
         const that = this;
+        console.log('that');
+        console.log(that);
 
         const isLoaded = new Promise(function(resolve, reject){
             return loadFromFile(resolve, reject);
@@ -271,20 +295,69 @@ class SSView extends React.Component {
         isLoaded.then(function(loadedXML){
             console.log('Loading resolved');
             const newXML = parseAndProcess(loadedXML);
-            that.setState({
-                xml: newXML
-            });
+            that.setState({ xml: newXML });
+            that.setState({ sequence_id: that.getCurrentSequence() })
             console.log('state:')
             console.log(that.state);
         });
     }
 
-    addCompTo(e){
-        console.log('Component added to vertical ' + e.target.parentNode.parentNode.id);
+    addCompTo(e, that, tagType='html'){
+        const currentXML = that.state.xml;
+
+        // Get vertical from click event
+        const parentVertical = e.target.parentNode.parentNode.id;
+
+        // Parse the current XML
+        const xparse = new DOMParser;
+        let xdoc = xparse.parseFromString(currentXML, 'application/xml');
+        let xns = xdoc.documentElement.namespaceURI;
+
+        // Add the component with minimal info
+        let UPC = xdoc.querySelectorAll('vertical[data-key="' + parentVertical + '"]');
+        let newComp = that.makeTag(tagType,'Unnamed HTML','5:00', xns);
+        UPC[0].appendChild(newComp);
+
+        // Serialize it.
+        const xser = new XMLSerializer();
+        const finalString = xser.serializeToString(xdoc);
+
+        // Update the state
+        that.setState({
+            xml: finalString
+        });
+
+        console.log('Component added to vertical ' + parentVertical);
     }
 
-    addVerticalTo(e){
-        console.log('Vertical added to sequence ' + e.target.parentNode.parentNode.id);
+    addVerticalTo(e, that){
+
+        const currentXML = that.state.xml;
+
+        // Get vertical from click event
+        const parentSequential = e.target.parentNode.parentNode.id;
+
+        // Parse the current XML
+        const xparse = new DOMParser;
+        let xdoc = xparse.parseFromString(currentXML, 'application/xml');
+        let xns = xdoc.documentElement.namespaceURI;
+
+        // Add the component with minimal info
+        let UPC = xdoc.querySelectorAll('sequential[data-key="' + parentSequential + '"]');
+        console.log(UPC);
+        let newComp = that.makeTag('vertical','Unnamed Unit','0', xns);
+        UPC[0].appendChild(newComp);
+
+        // Serialize it.
+        const xser = new XMLSerializer();
+        const finalString = xser.serializeToString(xdoc);
+
+        // Update the state
+        that.setState({
+            xml: finalString
+        });
+
+        console.log('Vertical added to sequence ' + parentSequential);
     }
 
     renderLoadFileButton(){
@@ -305,6 +378,7 @@ class SSView extends React.Component {
         // console.log(sequentials);
         const seq1 = sequentials[0];
         const ACT = this.addCompTo;
+        const that = this;
 
         // For each vertical, create a column
         const verticals = Array.from(seq1.children).map(function(v, index){
@@ -314,7 +388,8 @@ class SSView extends React.Component {
                     key={keyid}
                     id={keyid}
                     thisVert={v}
-                    compAdder={(e) => ACT(e)}/>
+                    compAdder={(e) => ACT(e, that, 'html')}
+                />
             )
         });
         // console.log('verticals:');
@@ -323,7 +398,11 @@ class SSView extends React.Component {
         return (
             <React.Fragment>
                 {verticals}
-                <VertAdder key={adderID} id={adderID} onClick={(e) => this.addVerticalTo(e)}/>
+                <VertAdder
+                    key={adderID}
+                    id={adderID}
+                    onClick={(e) => this.addVerticalTo(e, that)}
+                />
             </React.Fragment>
         )
     }
@@ -336,8 +415,9 @@ class SSView extends React.Component {
                     {this.renderOutputXMLButton()}
                 </div>
                 <div
-                    className='allverticals row'
+                    className='sequential row'
                     id={this.state.sequence_id}
+                    data-key={this.state.sequence_id}
                     >
                         {this.renderVerticals()}
                 </div>
@@ -394,19 +474,7 @@ function parseAndProcess(xmlString){
 
     // Parse the XML and store the namespace
     let xdoc = xparse.parseFromString(stringWithIDs, 'application/xml');
-    let xns = xdoc.documentElement.namespaceURI;
     console.log('xdoc created');
-    // console.log(xdoc);
-
-    // Manipulate it
-    let UPC = xdoc.querySelectorAll('vertical[display_name="Page 2"]');
-    var bloit = document.createElementNS(xns, 'problem');
-    bloit.setAttribute('display_name','Problem 5');
-    bloit.setAttribute('data-time','6:00');
-    bloit.setAttribute('data-key',makeRandomID());
-    var btext = document.createTextNode('');
-    bloit.appendChild(btext);
-    UPC[0].appendChild(bloit);
 
     // Serialize it. Gonna need a prettifier eventually.
     let finalString = xser.serializeToString(xdoc.documentElement);
