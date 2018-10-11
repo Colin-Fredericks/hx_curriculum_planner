@@ -13,6 +13,15 @@ const typeClassLookup = {
     'other': 'bg-secondary'
 };
 
+// Prepping for using my own colors at some point.
+// const typeClassLookup = {
+//     'video': 'video-component',
+//     'html': 'html-component',
+//     'problem': 'problem-component',
+//     'discussion': 'discussion-component',
+//     'other': 'other-component'
+// };
+
 const typeIconLookup = {
     'video': 'fa fa-video',
     'html': 'fa fa-file-alt',
