@@ -63,6 +63,7 @@ function secToHMS(time, useLeadingZeroes = true){
     }
 }
 
+
 // Makes a random, probably unique ID for each XML tag.
 function makeRandomID(){
     const textID = (Math.floor(Math.random() * 2**32).toString(16)) + (Math.floor(Math.random() * 2**32).toString(16));
@@ -96,6 +97,10 @@ function LoadFileButton(props) {
     return <button onClick = {props.onClick}>Load from file</button>;
 }
 
+// Button that loads the XML file
+function OutputXML(props) {
+    return <button onClick = {props.onClick}>Output XML</button>;
+}
 
 // EdX components are shown as boxes in the subsection view
 class Comp extends React.Component {
@@ -246,6 +251,13 @@ class SSView extends React.Component {
         };
     }
 
+    handleOutputButton(){
+        // For right now, just dump the current XML to the console.
+        // Uses vkBeautify: http://www.eslinstructor.net/vkbeautify/
+        const prettyXML = vkbeautify.xml(this.state.xml);
+        console.log(prettyXML);
+    }
+
     handleLoadButton(){
 
         const that = this;
@@ -277,6 +289,10 @@ class SSView extends React.Component {
 
     renderLoadFileButton(){
         return <LoadFileButton onClick={() => this.handleLoadButton()} />
+    }
+
+    renderOutputXMLButton(){
+        return <OutputXML onClick={() => this.handleOutputButton()} />
     }
 
     renderVerticals(){
@@ -315,7 +331,10 @@ class SSView extends React.Component {
     render(){
         return(
             <div className='container'>
-                <div className='controls row'>{this.renderLoadFileButton()}</div>
+                <div className='controls row'>
+                    {this.renderLoadFileButton()}
+                    {this.renderOutputXMLButton()}
+                </div>
                 <div
                     className='allverticals row'
                     id={this.state.sequence_id}
