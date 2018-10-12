@@ -255,8 +255,8 @@ class SSView extends React.Component {
         this.state = {
             title: 'Untitled subsection',
             total_duration: -1,
-            sequence_id: -1,
-            xml: '<sequential/>'
+            sequence_id: 'deadbeef',
+            xml: '<sequential data-key="deadbeef" />'
         };
     }
 
