@@ -32,7 +32,7 @@ const typeIconLookup = {
 
 const skip_tags = [ 'wiki' ];
 
-const leaf_nodes = [
+const leaf_tags = [
     'annotatable', // This is the older, deprecated annotation component.
     'discussion',
     'done',
@@ -58,7 +58,7 @@ const leaf_nodes = [
     'word_cloud'
 ];
 
-const branch_nodes = [
+const branch_tags = [
     'course',
     'chapter',
     'sequential',
@@ -335,8 +335,8 @@ class SSView extends React.Component {
         console.log(that);
 
         const isLoaded = new Promise(function(resolve, reject){
-            return loadFromFile(filename, resolve, reject);
-            // return loadEntireCourse('course');
+            // return loadFromFile(filename, resolve, reject);
+            return loadEntireCourse('hx_boilerplate_course');
         });
 
         // Right now we're still loading the whole course XML.
@@ -513,18 +513,25 @@ function loadEntireCourse(folder){
 
 function drillDown(innerXML){
 
+    console.log('drillDown');
+
     // Parse the XML with jQuery
     let xdoc = $.parseXML(innerXML);
     let tag = xdoc.documentElement.tagName;
-    let url_name = xdoc.documentElement.attributes['url_name'];
+    let url_name = xdoc.documentElement.attributes['url_name'].value;
 
 
     // If this is a branch tag, drill down to the contents, whether file or inline XML.
-    if(tag in branch_tags){
+    if(branch_tags.indexOf(tag) > -1){
+        console.log('branch tag: ' + tag);
+        // console.log('child nodes: ');
+        // console.log(xdoc.childNodes);
+        // console.log('url_name: ' + url_name);
         // If it's an empty tag with a URL name, try to open the file.
-        if( (xdoc.childNodes.length === 0) && url_name ){
+        if( (xdoc.childNodes.length === 1) && url_name ){
+            console.log('opening file ' + tag + '/' + url_name);
             const isLoaded = new Promise(function(resolve, reject){
-                let newXML = loadFromFile(tag + '/' + url_name, resolve, reject);
+                let newXML = loadFromFile(tag + '/' + url_name + '.xml', resolve, reject);
                 if(newXML){
                     return newXML;
                 }else{
@@ -534,7 +541,7 @@ function drillDown(innerXML){
             });
 
             isLoaded.then(function(loadedXML){
-                console.log('Loading ' + tag + '/' + url_name + ' resolved');
+                console.log('Loading ' + tag + '/' + url_name + '.xml' + ' resolved');
                 if(loadedXML === ''){
                     console.log('No file found.');
                     return '';
@@ -546,6 +553,7 @@ function drillDown(innerXML){
         // If not, more structure is probably declared inline here.
         // Drill down on direct children.
         else{
+            console.log('structure declared inline');
             $(xdoc).children().each(function(child){
                 innerXML += drillDown($(child).outerHTML);
             });
@@ -553,10 +561,11 @@ function drillDown(innerXML){
 
     }
     // If this is a leaf tag, get the XML and add it to the larger file.
-    else if(tag in leaf_tags){
+    else if(leaf_tags.indexOf(tag) > -1){
+        console.log('leaf tag');
         return innerXML;
     }else{
-        // Unknown tag. Skip it.
+        // Unknown or unwanted tag. Skip it.
         return '';
     }
 
@@ -576,8 +585,8 @@ function loadFromFile(filename, resolve, reject){
     // Create or get an XML string
     const xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
-        console.log(this.readyState);
-        console.log(this.status);
+        // console.log(this.readyState);
+        // console.log(this.status);
         if (this.readyState == 4 && this.status == 200) {
             console.log('XML obtained');
             // console.log(this.responseText);
