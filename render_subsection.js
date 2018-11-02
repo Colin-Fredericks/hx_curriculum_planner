@@ -529,7 +529,7 @@ function drillDown(innerXML){
         // console.log('url_name: ' + url_name);
         // If it's an empty tag with a URL name, try to open the file.
         if( (xdoc.childNodes.length === 1) && url_name ){
-            console.log('opening file ' + tag + '/' + url_name);
+            console.log('opening file ' + tag + '/' + url_name + '.xml');
             const isLoaded = new Promise(function(resolve, reject){
                 let newXML = loadFromFile(tag + '/' + url_name + '.xml', resolve, reject);
                 if(newXML){
