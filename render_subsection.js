@@ -30,6 +30,44 @@ const typeIconLookup = {
     'other': 'fa fa-file'
 }
 
+const skip_tags = [ 'wiki' ];
+
+const leaf_nodes = [
+    'annotatable', // This is the older, deprecated annotation component.
+    'discussion',
+    'done',
+    'drag-and-drop-v2',
+    'html',
+    'imageannotation',
+    'library_content',
+    'lti',  // This is the older, deprecated LTI component.
+    'lti_consumer',
+    'openassessment',
+    'oppia',
+    'poll',
+    'poll_question', // This is the older, deprecated poll component.
+    'problem',
+    'problem-builder',
+    'recommender',
+    'step-builder',
+    'survey',
+    'textannotation',
+    'ubcpi',
+    'video',
+    'videoannotation',
+    'word_cloud'
+];
+
+const branch_nodes = [
+    'course',
+    'chapter',
+    'sequential',
+    'vertical',
+    'split_test',
+    'conditional'
+];
+
+
 // Converts hh:mm:ss notation to a number of seconds.
 // If it's passed a number, it just spits that back out as seconds.
 function hmsToSec(hms){
