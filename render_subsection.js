@@ -292,11 +292,13 @@ class SSView extends React.Component {
     handleLoadButton(){
 
         const that = this;
+        const filename = 'test_course.xml';
         console.log('that');
         console.log(that);
 
         const isLoaded = new Promise(function(resolve, reject){
-            return loadFromFile(resolve, reject);
+            return loadFromFile(filename, resolve, reject);
+            // return loadEntireCourse('course');
         });
 
         // Right now we're still loading the whole course XML.
@@ -450,7 +452,83 @@ ReactDOM.render(
 / Calls React to render
 ****************************/
 
-function loadFromFile(resolve, reject){
+
+function loadEntireCourse(folder){
+    let OuterXML = '';
+
+    // Open the course XML file
+    const isLoaded = new Promise(function(resolve, reject){
+        return loadFromFile(folder + '/course.xml', resolve, reject);
+    });
+
+    isLoaded.then(function(loadedXML){
+        console.log('Loading resolved');
+        OuterXML = drillDown(loadedXML);
+        console.log('Course XML:')
+        console.log(OuterXML);
+    });
+
+}
+
+// Recursion function for repacking course XML
+// (still working on this section, pseudocode is wrong.)
+
+function drillDown(innerXML){
+
+    // Parse the XML with jQuery
+    let xdoc = $.parseXML(innerXML);
+    let tag = xdoc.documentElement.tagName;
+    let url_name = xdoc.documentElement.attributes['url_name'];
+
+
+    // If this is a branch tag, drill down to the contents, whether file or inline XML.
+    if(tag in branch_tags){
+        // If it's an empty tag with a URL name, try to open the file.
+        if( (xdoc.childNodes.length === 0) && url_name ){
+            const isLoaded = new Promise(function(resolve, reject){
+                let newXML = loadFromFile(tag + '/' + url_name, resolve, reject);
+                if(newXML){
+                    return newXML;
+                }else{
+                    // File missing or other issue.
+                    return '';
+                }
+            });
+
+            isLoaded.then(function(loadedXML){
+                console.log('Loading ' + tag + '/' + url_name + ' resolved');
+                if(loadedXML === ''){
+                    console.log('No file found.');
+                    return '';
+                }else{
+                    innerXML += drillDown(loadedXML);
+                }
+            });
+        }
+        // If not, more structure is probably declared inline here.
+        // Drill down on direct children.
+        else{
+            $(xdoc).children().each(function(child){
+                innerXML += drillDown($(child).outerHTML);
+            });
+        }
+
+    }
+    // If this is a leaf tag, get the XML and add it to the larger file.
+    else if(tag in leaf_tags){
+        return innerXML;
+    }else{
+        // Unknown tag. Skip it.
+        return '';
+    }
+
+    return innerXML;
+
+}
+
+
+// Gets the XML from a particular file as a string.
+function loadFromFile(filename, resolve, reject){
     console.log('loadFromFile');
 
     // Create XML parser and serializer
@@ -460,20 +538,25 @@ function loadFromFile(resolve, reject){
     // Create or get an XML string
     const xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
+        console.log(this.readyState);
+        console.log(this.status);
         if (this.readyState == 4 && this.status == 200) {
             console.log('XML obtained');
             // console.log(this.responseText);
             resolve(this.responseText);
+        }else if (this.readyState == 4 && this.status != 200){
+            console.log('HTTP request failed with status ' + this.status);
+            resolve(false);
         }
     };
-    xmlhttp.open("GET", "test_course.xml", true);
+    xmlhttp.open("GET", filename, true);
     xmlhttp.send();
 
 }
 
 function parseAndProcess(xmlString){
     console.log('parseAndProcess');
-    // console.log(xmlString);
+    console.log(xmlString);
     // Create XML parser and serializer
     const xparse = new DOMParser;
     const xser = new XMLSerializer();
