@@ -514,6 +514,12 @@ function loadEntireCourse(folder){
 function drillDown(innerXML, folder){
 
     console.log('drillDown');
+
+    // Ok, new plan here because I was dumb and didn't think ahead.
+    // Create an XML element out of the outermost tag.
+    // Append inner tags and their content inside it as I go.
+    // Build up an XML structure and not a string.
+
     // console.log(innerXML);
 
     // Parse the XML with jQuery
