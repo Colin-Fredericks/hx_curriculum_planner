@@ -514,7 +514,7 @@ function loadEntireCourse(folder){
 function drillDown(innerXML, folder){
 
     console.log('drillDown');
-    console.log(innerXML);
+    // console.log(innerXML);
 
     // Parse the XML with jQuery
     let xdoc = $.parseXML(innerXML);
@@ -542,36 +542,40 @@ function drillDown(innerXML, folder){
         if( (xdoc.childNodes.length === 1) && url_name ){
             const filename = folder + '/' + tag + '/' + url_name + '.xml'
             console.log('opening file ' + filename);
-            const isLoaded = new Promise(function(resolve, reject){
-                // Open the course XML file
-                const isLoaded = new Promise(function(resolve, reject){
-                    return loadFromFile(filename, resolve, reject);
-                });
-                // But, y'know, wait for it.
-                isLoaded.then(function(newXML){
-                    console.log('Loading ' + filename + ' resolved');
-                    console.log('new XML:');
-                    console.log(newXML);
-                    if(newXML){
-                        innerXML += drillDown(newXML, folder);
-                    }else{
-                        // File missing or other issue.
-                        console.log('Blank XML, returning.')
-                        innerXML += '';
-                    }
-                });
 
+            // Open the file.
+            const isLoaded = new Promise(function(resolve, reject){
+                return loadFromFile(filename, resolve, reject);
+            });
+            // But, y'know, wait for it.
+            isLoaded.then(function(newXML){
+                console.log('Loading ' + filename + ' resolved');
+                console.log('new XML:');
+                console.log(newXML);
+                if(newXML){
+                    innerXML += drillDown(newXML, folder);
+                    console.log('XML so far:');
+                    console.log(innerXML);
+                }else{
+                    // File missing or other issue.
+                    console.log('Blank XML')
+                    innerXML += '';
+                }
+                return innerXML;
             });
         }
         // If not, more structure is probably declared inline here.
-        // Drill down on direct children.
         else{
             console.log('structure declared inline');
-            console.log($(innerXML)[0]);
+            // console.log($(innerXML)[0]);
+            // Drill down on direct children.
             Array.from($(innerXML)[0].children).forEach(function(child){
                 console.log(child);
                 innerXML += drillDown(child.outerHTML, folder);
+                // console.log('XML so far:');
+                // console.log(innerXML);
             });
+            return innerXML;
         }
 
     }
@@ -587,7 +591,8 @@ function drillDown(innerXML, folder){
         return '';
     }
 
-    return innerXML;
+    console.log('Should never reach this statement.');
+    return false;
 
 }
 
