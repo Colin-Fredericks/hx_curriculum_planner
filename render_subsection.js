@@ -502,9 +502,13 @@ function loadEntireCourse(folder){
     isLoaded.then(function(loadedXML){
         console.log('Loading resolved');
         let xdoc = $.parseXML(loadedXML).documentElement;
-        OuterXML = drillDown(xdoc, folder);
-        console.log('Course XML:')
-        console.log(OuterXML);
+        const getCourseXML = new Promise(function(resolve, reject){
+            return drillDown(xdoc, folder, resolve, reject);
+        });
+        getCourseXML.then(function(OuterXML){
+            console.log('Course XML:')
+            console.log(OuterXML);
+        });
     });
 
 }
@@ -512,18 +516,20 @@ function loadEntireCourse(folder){
 // Recursion function for repacking course XML
 // (still working on this section, pseudocode is wrong.)
 
-function drillDown(xdoc, folder){
+function drillDown(xdoc, folder, resolve, reject){
 
     console.log('drillDown');
 
+    console.log('Incoming XML:');
     console.log(xdoc);
+    let tempXML = $(xdoc).clone()[0];
 
-    // For some reason some of them come out as all-caps?
-    let tag = xdoc.tagName.toLowerCase();
+    // For some reason some of the tag names come out as all-caps?
+    let tag = tempXML.tagName.toLowerCase();
     console.log('tag: ' + tag);
     let url_name = '';
     try{
-        url_name = xdoc.attributes['url_name'].value;
+        url_name = tempXML.attributes['url_name'].value;
         console.log('url_name: ' + url_name);
     }
     catch(err){
@@ -531,14 +537,13 @@ function drillDown(xdoc, folder){
         // console.log(err);
     }
 
-
     // If this is a branch tag, drill down to the contents, whether file or inline XML.
     if(branch_tags.indexOf(tag) > -1){
         console.log(tag + ' is a branch tag.');
         // console.log('child nodes: ');
-        // console.log(xdoc.childNodes);
+        // console.log(tempXML.childNodes);
         // If it's an empty tag with a URL name, try to open the file.
-        if( (xdoc.children.length === 0) && url_name ){
+        if( (tempXML.children.length === 0) && url_name ){
             const filename = folder + '/' + tag + '/' + url_name + '.xml';
             // console.log('Try to open file ' + filename);
 
@@ -549,52 +554,66 @@ function drillDown(xdoc, folder){
             // But, y'know, wait for it.
             isLoaded.then(function(newXML){
                 console.log('Loading ' + filename + ' resolved');
-                console.log('new XML:');
+                console.log('New XML from file:');
                 console.log(newXML);
                 if(newXML){
-                    xdoc = drillDown($(newXML)[0], folder);
+                    // Drill into to new file's XML.
+                    const gotDrilled = new Promise(function(resolve, reject){
+                        return drillDown($(newXML)[0], folder, resolve, reject);
+                    });
+                    gotDrilled.then(function(newdoc){
+                        console.log('Back from drill on file.')
+                        console.log(newdoc)
+                        if(newdoc){tempXML = newdoc;}
+                        resolve(tempXML);
+                    });
                 }else{
                     // File missing or other issue. Return existing XML.
                     console.log('Blank XML - missing file?');
+                    resolve(tempXML);
                 }
-                console.log('XML so far:');
-                console.log(xdoc);
-                return xdoc;
             });
 
-            return xdoc;
+            resolve(tempXML);
         }
         // If not, more structure is probably declared inline here.
         else{
             console.log('structure declared inline');
             // Drill down on direct children.
-            $.each(xdoc.children, function(index, child){
+            $.each(tempXML.children, function(i, child){
+                console.log('child #'+i);
                 console.log(child);
-                let childXML = drillDown(child, folder);
-                console.log('child XML:');
-                console.log(childXML);
-                if(childXML){
-                    xdoc.children[index] = childXML;
-                }
+                // Drill into to new file's XML.
+                const gotDrilled = new Promise(function(resolve, reject){
+                    return drillDown(child, folder, resolve, reject);
+                });
+                gotDrilled.then(function(childXML){
+                    console.log('child XML:');
+                    console.log(childXML);
+                    if(childXML){
+                        child.replaceWith(childXML);
+                    }else{
+                        child.remove();
+                    }
+                });
             });
-            return xdoc;
+            resolve(tempXML);
         }
-
     }
     // If this is a leaf tag, get the XML and add it to the larger file.
     else if(leaf_tags.indexOf(tag) > -1){
         console.log(tag + ' is a leaf tag.');
         console.log('Leaf XML:');
-        console.log(xdoc);
-        return xdoc;
+        console.log(tempXML);
+        resolve(tempXML);
     }else{
         console.log('What the hell tag is ' + tag + '?');
         // Unknown or unwanted tag. Skip it.
-        return false;
+        resolve({});
     }
 
     console.log('Should never reach this statement.');
-    return false;
+    resolve(false);
 
 }
 
