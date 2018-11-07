@@ -526,7 +526,7 @@ function loadFromFile(filename, resolve, reject){
         // console.log(this.status);
         if (this.readyState == 4 && this.status == 200) {
             console.log('XML obtained');
-            // console.log(this.responseText);
+            console.log(this.responseText);
             resolve(this.responseText);
         }else if (this.readyState == 4 && this.status != 200){
             console.log('HTTP request failed with status ' + this.status);
@@ -554,7 +554,7 @@ function drillDown(XML, folder, resolve, reject){
 
     // For some reason some of the tag names come out as all-caps?
     let tag = XMLObj.documentElement.tagName.toLowerCase();
-    console.log('tag: ' + tag);
+    // console.log('tag: ' + tag);
     
     let url_name = false;
     let filename = false;
@@ -562,7 +562,7 @@ function drillDown(XML, folder, resolve, reject){
     try{
         url_name = XMLObj.documentElement.attributes['url_name'].value;
         filename = folder + '/' + tag + '/' + url_name + '.xml';
-        console.log('url_name: ' + url_name);
+        // console.log('url_name: ' + url_name);
     }
     catch(err){
         console.log('No URL name, probably.');
@@ -595,7 +595,7 @@ function drillDown(XML, folder, resolve, reject){
                     driller.then(function(newObj){
                         console.log('Back from drill on file.')
                         console.log(newObj)
-                        if(newdoc){XMLObj = newObj.copy();}
+                        if(newdoc){XMLObj = $.parseXML(newObj);}
                         resolve(XMLObj);
                     });
                 }else{
@@ -614,7 +614,30 @@ function drillDown(XML, folder, resolve, reject){
             
             const childArray = Array.from(XMLObj.documentElement.children);
             console.log(childArray);
-            
+            childArray.forEach(function(child, index){
+                console.log('tag #' + index);
+                console.log(child);
+
+                // Drill into child XML
+                const driller = new Promise(function(resolve, reject){
+                    return drillDown(child.outerHTML, folder, resolve, reject);
+                });
+                driller.then(function(childObj){
+                    console.log('child XML object:');
+                    console.log(childObj);
+                    // Replace the child node in XMLObj with the child object.
+                    if(childObj){
+                        // Such ugliness.
+                        XMLObj.documentElement.remove(child.documentElement)
+                        XMLObj.documentElement.append(childObj.documentElement)
+                    }else{
+                        // But if we couldn't find it, just get rid of it.
+                        child.remove();
+                    }
+                });
+            });
+
+/*            
             childArray.forEach( function(child, index){
                 console.log('child #'+i);
                 console.log(child);
@@ -637,6 +660,7 @@ function drillDown(XML, folder, resolve, reject){
                     }
                 });
             });
+*/
             resolve(XMLObj);
         }
     }
@@ -655,9 +679,10 @@ function drillDown(XML, folder, resolve, reject){
             isLoaded.then(function(loadedXML){
                 console.log('Loading resolved');
                 if(loadedXML){
-                    resolve( $(loadedXML)[0] );
+                    resolve( $.parseXML(loadedXML) );
                 }else{
-                    console.log('No XML loaded.')
+                    console.log('No XML loaded.');
+                    resolve( {} );
                 }
             });
         }
@@ -669,7 +694,7 @@ function drillDown(XML, folder, resolve, reject){
     }else{
         console.log('What the hell tag is ' + tag + '?');
         // Unknown or unwanted tag. Skip it.
-        resolve({});
+        resolve( {} );
     }
 
     console.log('Should never reach this statement.');
