@@ -492,7 +492,6 @@ ReactDOM.render(
 
 
 function loadEntireCourse(folder){
-    let OuterXML = '';
 
     // Open the course XML file
     const isLoaded = new Promise(function(resolve, reject){
@@ -549,19 +548,19 @@ function drillDown(XML, folder, resolve, reject){
     console.log('Incoming XML:');
     console.log(XML);
     
-    let XMLObj = $(XML);
+    let XMLObj = $.parseXML(XML);
     console.log('As an object:');
     console.log(XMLObj);
 
     // For some reason some of the tag names come out as all-caps?
-    let tag = XMLObj.tagName.toLowerCase();
+    let tag = XMLObj.documentElement.tagName.toLowerCase();
     console.log('tag: ' + tag);
     
     let url_name = false;
     let filename = false;
     
     try{
-        url_name = XMLObj.attributes['url_name'].value;
+        url_name = XMLObj.documentElement.attributes['url_name'].value;
         filename = folder + '/' + tag + '/' + url_name + '.xml';
         console.log('url_name: ' + url_name);
     }
@@ -576,7 +575,7 @@ function drillDown(XML, folder, resolve, reject){
         console.log(tag + ' is a branch tag.');
         
         // If it's an empty tag with a URL name, try to open the file.
-        if( (XMLObj.children.length === 0) && url_name ){
+        if( (XMLObj.documentElement.children.length === 0) && url_name ){
             // console.log('Try to open file ' + filename);
 
             // Open the file.
@@ -612,9 +611,14 @@ function drillDown(XML, folder, resolve, reject){
         else{
             console.log('structure declared inline');
             // Drill down on direct children.
-            XMLObj.children().each( function(i, child){
+            
+            const childArray = Array.from(XMLObj.documentElement.children);
+            console.log(childArray);
+            
+            childArray.forEach( function(child, index){
                 console.log('child #'+i);
                 console.log(child);
+                
                 // Drill into child XML
                 const driller = new Promise(function(resolve, reject){
                     return drillDown(child.outerHTML, folder, resolve, reject);
@@ -622,9 +626,13 @@ function drillDown(XML, folder, resolve, reject){
                 driller.then(function(childObj){
                     console.log('child XML object:');
                     console.log(childObj);
-                    if(childXML){
-                        child.replaceWith(childObj);
+                    // Replace the child node in XMLObj with the child object.
+                    if(childObj){
+                        // Such ugliness.
+                        XMLObj.documentElement.remove(child.documentElement)
+                        XMLObj.documentElement.append(childObj.documentElement)
                     }else{
+                        // But if we couldn't find it, just get rid of it.
                         child.remove();
                     }
                 });
@@ -647,7 +655,7 @@ function drillDown(XML, folder, resolve, reject){
             isLoaded.then(function(loadedXML){
                 console.log('Loading resolved');
                 if(loadedXML){
-                    resolve( $(loadedXML) );
+                    resolve( $(loadedXML)[0] );
                 }else{
                     console.log('No XML loaded.')
                 }
