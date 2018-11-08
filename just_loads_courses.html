@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+
+const skip_tags = [ 'wiki' ];
+
+const leaf_tags = [
+    'annotatable', // This is the older, deprecated annotation component.
+    'discussion',
+    'done',
+    'drag-and-drop-v2',
+    'html',
+    'imageannotation',
+    'library_content',
+    'lti',  // This is the older, deprecated LTI component.
+    'lti_consumer',
+    'openassessment',
+    'oppia',
+    'poll',
+    'poll_question', // This is the older, deprecated poll component.
+    'problem',
+    'problem-builder',
+    'recommender',
+    'step-builder',
+    'survey',
+    'textannotation',
+    'ubcpi',
+    'video',
+    'videoannotation',
+    'word_cloud'
+];
+
+const branch_tags = [
+    'course',
+    'chapter',
+    'sequential',
+    'vertical',
+    'split_test',
+    'conditional'
+];
+
+function loadEntireCourse(folder){
+
+    // Open the course XML file
+    const isLoaded = new Promise(function(resolve, reject){
+        return loadFromFile(folder + '/course.xml', resolve, reject);
+    });
+
+    isLoaded.then(function(loadedXML){
+        console.log('Loading resolved');
+        const getCourseXML = new Promise(function(resolve, reject){
+            return drillDown(loadedXML, folder, resolve, reject);
+        });
+        getCourseXML.then(function(OuterXML){
+            console.log('Course XML:')
+            console.log(OuterXML);
+        });
+    });
+
+}
+
+// Get the XML from a particular file and return it as a string.
+function loadFromFile(filename, resolve, reject){
+    console.log('loadFromFile ' + filename);
+
+    // Create XML parser and serializer
+    const xparse = new DOMParser;
+    const xser = new XMLSerializer();
+
+    // Create or get an XML string
+    const xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        // console.log(this.readyState);
+        // console.log(this.status);
+        if (this.readyState == 4 && this.status == 200) {
+            console.log('XML obtained');
+            console.log(this.responseText);
+            resolve(this.responseText);
+        }else if (this.readyState == 4 && this.status != 200){
+            console.log('HTTP request failed with status ' + this.status);
+            resolve(false);
+        }
+    };
+    xmlhttp.open("GET", filename, true);
+    xmlhttp.send();
+
+}
+
+
+// Recursion function for repacking course XML
+// XML is passed in as text and turned into a jQuery object.
+function drillDown(XML, folder, resolve, reject){
+
+    console.log('drillDown');
+
+    console.log('Incoming XML:');
+    console.log(XML);
+
+    let XMLObj = $.parseXML(XML);
+    console.log('As an object:');
+    console.log(XMLObj);
+
+    // For some reason some of the tag names come out as all-caps?
+    let tag = XMLObj.documentElement.tagName.toLowerCase();
+    // console.log('tag: ' + tag);
+
+    let url_name = false;
+    let filename = false;
+
+    try{
+        url_name = XMLObj.documentElement.attributes['url_name'].value;
+        filename = folder + '/' + tag + '/' + url_name + '.xml';
+        // console.log('url_name: ' + url_name);
+    }
+    catch(err){
+        console.log('No URL name, probably.');
+        // console.log(err);
+    }
+
+
+    // If this is a branch tag, drill down to the contents, whether file or inline XML.
+    if(branch_tags.indexOf(tag) > -1){
+        console.log(tag + ' is a branch tag.');
+
+        // If it's an empty tag with a URL name, try to open the file.
+        if( (XMLObj.documentElement.children.length === 0) && url_name ){
+            // console.log('Try to open file ' + filename);
+
+            // Open the file.
+            const isLoaded = new Promise(function(resolve, reject){
+                return loadFromFile(filename, resolve, reject);
+            });
+            // But, y'know, wait for it.
+            isLoaded.then(function(newXML){
+                console.log('Loading ' + filename + ' resolved');
+                console.log('New XML from file:');
+                console.log(newXML);
+                if(newXML){
+                    // Drill into to new file's XML.
+                    const driller = new Promise(function(resolve, reject){
+                        return drillDown(newXML, folder, resolve, reject);
+                    });
+                    driller.then(function(newObj){
+                        console.log('Back from drill on file.')
+                        console.log(newObj)
+                        if(newdoc){XMLObj = $.parseXML(newObj);}
+                        resolve(XMLObj);
+                    });
+                }else{
+                    // File missing or other issue. Return existing XML.
+                    console.log('Blank XML - missing file?');
+                    resolve(XMLObj);
+                }
+            });
+
+            resolve(XMLObj);
+        }
+        // If there are children, dive into them here.
+        else{
+            console.log('structure declared inline');
+            // Drill down on direct children.
+
+            const childArray = Array.from(XMLObj.documentElement.children);
+            console.log(childArray);
+            childArray.forEach(function(child, index){
+                console.log('tag #' + index);
+                console.log(child);
+
+                // Drill into child XML
+                const driller = new Promise(function(resolve, reject){
+                    return drillDown(child.outerHTML, folder, resolve, reject);
+                });
+                driller.then(function(childObj){
+                    console.log('child XML object:');
+                    console.log(childObj);
+                    // Replace the child node in XMLObj with the child object.
+                    if(childObj){
+                        // Such ugliness.
+                        XMLObj.documentElement.remove(child.documentElement)
+                        XMLObj.documentElement.append(childObj.documentElement)
+                    }else{
+                        // But if we couldn't find it, just get rid of it.
+                        child.remove();
+                    }
+                });
+            });
+
+/*
+            childArray.forEach( function(child, index){
+                console.log('child #'+i);
+                console.log(child);
+
+                // Drill into child XML
+                const driller = new Promise(function(resolve, reject){
+                    return drillDown(child.outerHTML, folder, resolve, reject);
+                });
+                driller.then(function(childObj){
+                    console.log('child XML object:');
+                    console.log(childObj);
+                    // Replace the child node in XMLObj with the child object.
+                    if(childObj){
+                        // Such ugliness.
+                        XMLObj.documentElement.remove(child.documentElement)
+                        XMLObj.documentElement.append(childObj.documentElement)
+                    }else{
+                        // But if we couldn't find it, just get rid of it.
+                        child.remove();
+                    }
+                });
+            });
+*/
+            resolve(XMLObj);
+        }
+    }
+    // If this is a leaf tag, get the XML and add it to the larger file.
+    else if(leaf_tags.indexOf(tag) > -1){
+        console.log(tag + ' is a leaf tag.');
+        console.log('Leaf XML:');
+        console.log(XMLObj);
+        // Try opening a file with this leaf's url_name.
+        // If it works, return that XML as an object.
+        if(filename){
+            const isLoaded = new Promise(function(resolve, reject){
+                return loadFromFile(folder + '/course.xml', resolve, reject);
+            });
+
+            isLoaded.then(function(loadedXML){
+                console.log('Loading resolved');
+                if(loadedXML){
+                    resolve( $.parseXML(loadedXML) );
+                }else{
+                    console.log('No XML loaded.');
+                    resolve( {} );
+                }
+            });
+        }
+
+        // If it doesn't work, the component is probably declared inline.
+        // Return our CURRENT XML as an object.
+        resolve(XMLObj);
+
+    }else{
+        console.log('What the hell tag is ' + tag + '?');
+        // Unknown or unwanted tag. Skip it.
+        resolve( {} );
+    }
+
+    console.log('Should never reach this statement.');
+    resolve(false);
+
+}
+
+
+function parseAndProcess(xmlString){
+    console.log('parseAndProcess');
+    console.log(xmlString);
+    // Create XML parser and serializer
+    const xparse = new DOMParser;
+    const xser = new XMLSerializer();
+
+    // Give everything IDs.
+    let stringWithIDs = giveEverythingIDs(xmlString)
+
+    // Parse the XML and store the namespace
+    let xdoc = xparse.parseFromString(stringWithIDs, 'application/xml');
+    console.log('xdoc created');
+
+    // Serialize it. Gonna need a prettifier eventually.
+    let finalString = xser.serializeToString(xdoc.documentElement);
+
+    return finalString;
+
+}
+
+$(document).ready(function(){
+    $('#loadit').on('click tap', function(){
+        loadEntireCourse('hx_boilerplate_course');
+    });
+});
+</script>
+</head>
+
+<body>
+    <p><button id="loadit">Load the course</button></p>
+    <p>(Check the javascript console.)</p>
+</body>
+
+</html>
