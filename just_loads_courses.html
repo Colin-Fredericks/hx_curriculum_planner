@@ -147,7 +147,7 @@ function drillDown(XML, folder, resolve, reject){
                     driller.then(function(newObj){
                         console.log('Back from drill on file.')
                         console.log(newObj)
-                        if(newdoc){XMLObj = $.parseXML(newObj);}
+                        if(newObj){XMLObj = $.parseXML(newObj);}
                         resolve(XMLObj);
                     });
                 }else{
@@ -157,7 +157,7 @@ function drillDown(XML, folder, resolve, reject){
                 }
             });
 
-            resolve(XMLObj);
+            // resolve(XMLObj);
         }
         // If there are children, dive into them here.
         else{
@@ -166,28 +166,35 @@ function drillDown(XML, folder, resolve, reject){
 
             const childArray = Array.from(XMLObj.documentElement.children);
             console.log(childArray);
-            childArray.forEach(function(child, index){
-                console.log('tag #' + index);
-                console.log(child);
 
-                // Drill into child XML
-                const driller = new Promise(function(resolve, reject){
-                    return drillDown(child.outerHTML, folder, resolve, reject);
-                });
-                driller.then(function(childObj){
-                    console.log('child XML object:');
-                    console.log(childObj);
-                    // Replace the child node in XMLObj with the child object.
-                    if(childObj){
-                        // Such ugliness.
-                        XMLObj.documentElement.remove(child.documentElement)
-                        XMLObj.documentElement.append(childObj.documentElement)
-                    }else{
-                        // But if we couldn't find it, just get rid of it.
-                        child.remove();
-                    }
+            // Wrap the forEach in a promise so it only resolves when 100% done.
+            let requests = childArray.map((child, index) => {
+                return new Promise((resolve, reject) => {
+                    console.log('tag #' + index);
+                    console.log(child);
+
+                    // Drill into child XML
+                    const driller = new Promise(function(resolve, reject){
+                        return drillDown(child.outerHTML, folder, resolve, reject);
+                    });
+                    driller.then(function(childObj){
+                        console.log('child XML object:');
+                        console.log(childObj);
+                        // Replace the child node in XMLObj with the child object.
+                        if(childObj){
+                            // Such ugliness.
+                            // Am I preserving order here? Would be important to do that.
+                            XMLObj.documentElement.remove(child.documentElement)
+                            XMLObj.documentElement.append(childObj.documentElement)
+                        }else{
+                            // But if we couldn't find it, just get rid of it.
+                            child.remove();
+                        }
+                    });
                 });
             });
+
+            Promise.all(requests).then(() => resolve(XMLObj));
 
 /*
             childArray.forEach( function(child, index){
@@ -213,7 +220,7 @@ function drillDown(XML, folder, resolve, reject){
                 });
             });
 */
-            resolve(XMLObj);
+
         }
     }
     // If this is a leaf tag, get the XML and add it to the larger file.
@@ -237,11 +244,14 @@ function drillDown(XML, folder, resolve, reject){
                     resolve( {} );
                 }
             });
+        }else{
+            console.log('No valid filename.');
+            resolve( {} );
         }
 
         // If it doesn't work, the component is probably declared inline.
         // Return our CURRENT XML as an object.
-        resolve(XMLObj);
+        // resolve(XMLObj);
 
     }else{
         console.log('What the hell tag is ' + tag + '?');
@@ -249,8 +259,8 @@ function drillDown(XML, folder, resolve, reject){
         resolve( {} );
     }
 
-    console.log('Should never reach this statement.');
-    resolve(false);
+    // console.log('Should never reach this statement.');
+    // resolve(false);
 
 }
 
