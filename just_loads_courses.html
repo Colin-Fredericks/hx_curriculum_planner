@@ -137,8 +137,8 @@ function drillDown(XML, folder, resolve, reject){
             // But, y'know, wait for it.
             isLoaded.then(function(newXML){
                 console.log('Loading ' + filename + ' resolved');
-                console.log('New XML from file:');
-                console.log(newXML);
+                // console.log('New XML from file:');
+                // console.log(newXML);
                 if(newXML){
                     // Drill into to new file's XML.
                     const driller = new Promise(function(resolve, reject){
@@ -147,8 +147,12 @@ function drillDown(XML, folder, resolve, reject){
                     driller.then(function(newObj){
                         console.log('Back from drill on file.')
                         console.log(newObj)
-                        if(newObj){XMLObj = $.parseXML(newObj);}
-                        resolve(XMLObj);
+                        if(newObj){
+                            resolve(newObj);
+                        }else{
+                            console.log('No XML found.');
+                        }
+                        
                     });
                 }else{
                     // File missing or other issue. Return existing XML.
@@ -177,49 +181,27 @@ function drillDown(XML, folder, resolve, reject){
                     const driller = new Promise(function(resolve, reject){
                         return drillDown(child.outerHTML, folder, resolve, reject);
                     });
-                    driller.then(function(childObj){
+                    driller.then(function(newChildObj){
                         console.log('child XML object:');
-                        console.log(childObj);
+                        console.log(newChildObj);
                         // Replace the child node in XMLObj with the child object.
-                        if(childObj){
+                        if(newChildObj){
+                            // console.log('replacing - before:');
+                            // console.log(XMLObj);
                             // Such ugliness.
-                            // Am I preserving order here? Would be important to do that.
-                            XMLObj.documentElement.remove(child.documentElement)
-                            XMLObj.documentElement.append(childObj.documentElement)
+                            XMLObj.documentElement.children[index].replaceWith(newChildObj.documentElement);
+                            // console.log('after:')
+                            // console.log(XMLObj);
                         }else{
                             // But if we couldn't find it, just get rid of it.
                             child.remove();
                         }
+                        resolve(XMLObj);
                     });
                 });
             });
 
             Promise.all(requests).then(() => resolve(XMLObj));
-
-/*
-            childArray.forEach( function(child, index){
-                console.log('child #'+i);
-                console.log(child);
-
-                // Drill into child XML
-                const driller = new Promise(function(resolve, reject){
-                    return drillDown(child.outerHTML, folder, resolve, reject);
-                });
-                driller.then(function(childObj){
-                    console.log('child XML object:');
-                    console.log(childObj);
-                    // Replace the child node in XMLObj with the child object.
-                    if(childObj){
-                        // Such ugliness.
-                        XMLObj.documentElement.remove(child.documentElement)
-                        XMLObj.documentElement.append(childObj.documentElement)
-                    }else{
-                        // But if we couldn't find it, just get rid of it.
-                        child.remove();
-                    }
-                });
-            });
-*/
 
         }
     }
@@ -232,7 +214,13 @@ function drillDown(XML, folder, resolve, reject){
         // If it works, return that XML as an object.
         if(filename){
             const isLoaded = new Promise(function(resolve, reject){
-                return loadFromFile(folder + '/course.xml', resolve, reject);
+                //if(tag === 'html'){
+                    // HTML components are treated slightly differently in OLX. Switch extension.
+                    // However, we can't read HTML from disk right now because javascript arrggghhhh
+                    //return loadFromFile(filename.replace(/\.[^/.]+$/, "") + '.html', resolve, reject);
+                //}else{
+                    return loadFromFile(filename, resolve, reject);
+                //}
             });
 
             isLoaded.then(function(loadedXML){
