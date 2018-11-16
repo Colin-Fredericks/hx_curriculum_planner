@@ -81,7 +81,7 @@ function loadFromFile(filename, resolve, reject){
             console.log(this.responseText);
             resolve(this.responseText);
         }else if (this.readyState == 4 && this.status != 200){
-            console.log('HTTP request failed with status ' + this.status);
+            console.log('HTTP request for ' + filename + ' failed with status ' + this.status);
             resolve(false);
         }
     };
@@ -193,8 +193,7 @@ function drillDown(XML, folder, resolve, reject){
                             // console.log('after:')
                             // console.log(XMLObj);
                         }else{
-                            // But if we couldn't find it, just get rid of it.
-                            child.remove();
+                            // But if we couldn't find it, just leave the inline version in place.
                         }
                         resolve(XMLObj);
                     });
@@ -229,7 +228,7 @@ function drillDown(XML, folder, resolve, reject){
                     resolve( $.parseXML(loadedXML) );
                 }else{
                     console.log('No XML loaded.');
-                    resolve( {} );
+                    resolve( XMLObj );
                 }
             });
         }else{
