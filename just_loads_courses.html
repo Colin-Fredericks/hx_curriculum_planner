@@ -167,7 +167,8 @@ function drillDown(XML, folder, resolve, reject){
             const childArray = Array.from(XMLObj.documentElement.children);
             console.log(childArray);
 
-            // Wrap the forEach in a promise so it only resolves when 100% done.
+            // Wrap array handling in promises so it only resolves when 100% done.
+            // https://stackoverflow.com/questions/18983138/callback-after-all-asynchronous-foreach-callbacks-are-completed#18983245
             let requests = childArray.map((child, index) => {
                 return new Promise((resolve, reject) => {
                     console.log('tag #' + index);
